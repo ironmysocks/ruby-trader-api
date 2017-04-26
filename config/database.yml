@@ -1,0 +1,16 @@
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+
+development:
+  <<: *default
+  database: ruby-trader_dev
+
+test:
+  <<: *default
+  database: ruby-trader_test
+
+production:
+  <<: *default
+  database: ruby-trader_production
