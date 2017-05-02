@@ -1,12 +1,14 @@
 class Stock < ApplicationRecord
 
+  belongs_to :stockholder, polymorphic: true
+
   validates_presence_of :symbol
-  validates_uniqueness_of :symbol, scope: :watchlist_id
+  #validates_uniqueness_of :symbol, scope: :watchlist_id
 
-  attr_accessor :live_data
+  attr_writer :live_data
 
-  after_initialize do
-    @live_data = StockQuote::Stock.quote(self.symbol)
+  def live_data
+    @live_data ||= StockQuote::Stock.quote(self.symbol)
   end
 
   def last_price

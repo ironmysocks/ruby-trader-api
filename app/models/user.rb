@@ -1,10 +1,11 @@
 class User < ApplicationRecord
-  devise :database_authenticatable, :registerable,
-         :recoverable, :rememberable, :trackable, :validatable
+
   has_many :watchlists
   has_one :portfolio
 
-  def username
-    "#{self.first_name}#{self.last_name}"
-  end
+  validates_presence_of :first_name, :last_name, :email, :password_digest
+  validates_uniqueness_of :email, :case_sensitive => true
+
+  has_secure_password
+
 end

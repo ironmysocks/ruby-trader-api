@@ -1,64 +1,51 @@
 module Api
   module V1
     class WatchlistsController < ApiController
+      include ParameterChecker
       before_action :set_watchlist_by_user, only: [:show_for_user]
       before_action :set_watchlist, only: [:show, :update, :destroy,
                                           :move_stock_to_portfolio]
 
       # GET /v1/watchlists
       def index
-        render json: Watchlist.all
+        @watchlist = current_user.watchlists
+        json_response(@watchlist)
       end
 
       # POST /v1/watchlists
       def create
-        @watchlist = Watchlist.new(watchlist_params)
-        if @watchlist.save
-          render json: { message: 'Watchlist was added.' }
-        else
-          render json: { message: 'There was an error adding the watchlist.' }
-        end
-      end
+        @watchlist = current_user.watchlists.create!(watchlist_params)
+        json_response(@watchlist, :created)
+    end
 
       # GET /v1/watchlists/1
       def show
-        render json: @watchlist
+        json_response(@watchlist)
       end
 
       # GET /v1/users/1/watchlists
       # Get all watchlists for the user
       def show_for_user
-        render json: @watchlist
+        json_response(@watchlist)
       end
 
       # PUT /v1/watchlists/1
       def update
-        if @watchlist.update(watchlist_params)
-          render json: { message: 'Watchlist was updated.' }
-        else
-          render json: { message: 'There was an error updating the watchlist.' }
-        end
+        @watchlist.update(watchlist_params)
+        head :no_content
       end
 
       # DELETE /v1/watchlists/1
       def destroy
         @watchlist.destroy
-        render json: { message: 'The watchlist was deleted.' }
+        head :no_content
       end
 
       def move_stock_to_portfolio
-        s = @watchlist.stocks.where(symbol: params[:symbol].upcase)
-
-        if !s.blank?
-          if s.update({watchlist_id: nil, portfolio_id: @watchlist.user.portfolio.id})
-            render json: { message: "#{s.symbol} was moved to the portfolio." }
-          else
-            render json: { message: "There was an error moving the stock." }
-          end
-        else
-          render json: { message: "The stock doesn't exist in the watchlist." }
-        end
-
+        s = Stock.find(params[:stock_id])
+        portfolio_id = Portfolio.find_by(user_id: @watchlist.user.id).id
+        s.update({stockholder_id: portfolio_id, stockholder_type: 'Portfolio'})
+        head :no_content
       end
 
       private
@@ -67,12 +54,11 @@ module Api
       end
 
       def set_watchlist_by_user
-        @watchlist = Watchlist.where(user_id: params[:id])
+        @watchlist = Watchlist.find_by!(user_id: params[:id])
       end
 
       def watchlist_params
-        params.require(:watchlist).permit(:user_id, :name,
-          stocks_attributes: [:id, :watchlist_id, :symbol, :_destroy])
+        params.require(:watchlist).permit(watchlists_allowed_params)
       end
 
     end

@@ -1,53 +1,55 @@
 module Api
   module V1
     class StocksController < ApiController
+      include ParameterChecker
+      before_action :find_stockholder
       before_action :set_stock, only: [:show, :update, :destroy]
 
-      # GET /v1/stocks
+      # GET /v1/watchlists/1/stocks
       def index
-        render json: Stock.all
+        json_response(@stockholder.stocks)
       end
 
-      # GET /v1/stocks/1
+      # GET /v1/watchlists/1/stocks/1
       def show
-        render json: @stock
+        json_response(@stock)
       end
 
-      # POST /v1/stocks
+      # POST /v1/watchlists/1/stocks
       def create
-        @stock = Stock.new(stock_params)
-        if @stock.save
-          render json: { message: 'Stock was added.' }
-        else
-          render json: { message: 'There was an error adding the stock.' }
-        end
+        @stockholder.stocks.create!(stock_params)
+        json_response(@stockholder,:created)
       end
 
-      # PATCH/PUT /v1/stocks/aapl
+      # PATCH/PUT /v1/watchlists/1/stocks/1
       def update
-        if @stock.update(stock_params)
-          render json: { message: 'Stock was updated.' }
-        else
-          render json: { message: 'There was an error updating the stock.' }
-        end
+        @stock.update(stock_params)
+        head :no_content
       end
 
-      # DELETE /v1/stocks/aapl
+      # DELETE /v1/watchlists/1/stocks/1
       def destroy
         @stock.destroy
-        render json: { message: 'The stock was deleted.' }
+        head :no_content
       end
 
       private
+
       def set_stock
-        @stock = Stock.find_or_create_by(params[:id])
+        @stock = @stockholder.stocks.find_by!(id: params[:id]) if @stockholder
       end
 
       def stock_params
-        params.require(:stock).permit(:id, :portfolio_id, :watchlist_id, :symbol, :alert_price
-                                      :target_entry, :target_exit, :target_stop, :risk_amount,
-                                      :reward_amount, :entry_price, :entry_date, :shares,
-                                      :exit_price, :exit_date, :realized_pl)
+        params.require(:stock).permit(stocks_allowed_params)
+      end
+
+      def find_stockholder
+        params.each do |name, value|
+          if name =~ /(.+)_id$/
+            @stockholder =  $1.classify.constantize.find(value)
+          end
+        end
+        @stockholder
       end
 
     end

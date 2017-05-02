@@ -12,7 +12,13 @@ gem 'puma', '~> 3.0'
 group :development, :test do
   gem 'byebug', platform: :mri
   gem 'rspec-rails', '~> 3.5'
-  gem 'factory_girl', '~> 4.8'
+end
+
+group :test do
+  gem 'factory_girl_rails', '~> 4.0'
+  gem 'shoulda-matchers', '~> 3.1'
+  gem 'faker'
+  gem 'database_cleaner'
 end
 
 group :development do
@@ -22,6 +28,7 @@ group :development do
 end
 
 gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
-gem 'devise', '~> 4.2', '>= 4.2.1'
 gem 'stock_quote', '~> 1.2', '>= 1.2.3'
 gem 'active_model_serializers', '~> 0.10.5'
+gem 'bcrypt', '~> 3.1.7'
+gem 'jwt'
